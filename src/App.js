@@ -100,7 +100,7 @@ function getSuggestions(value) {
     ? []
     : suggestions.filter(suggestion => {
         const keep =
-          count < 15 && suggestion.label.slice(0, inputLength).toLowerCase() === inputValue;
+          count < 5 && suggestion.label.slice(0, inputLength).toLowerCase() === inputValue;
 
         if (keep) {
           count += 1;
@@ -120,7 +120,7 @@ class DownshiftMultiple extends React.Component {
     const { inputValue, selectedItem } = this.state;
     if (selectedItem.length && !inputValue.length && keycode(event) === 'backspace') {
       this.setState({
-        selectedItem: selectedItem.slice(0, selectedItem.length - 1),
+          selectedItem: selectedItem.slice(0, selectedItem.length - 1)
       });
     }
   };
@@ -156,7 +156,7 @@ class DownshiftMultiple extends React.Component {
 
     return (
       <Downshift
-        id="downshift-multiple"
+        id="downshift-popper"
         inputValue={inputValue}
         onChange={this.handleChange}
         selectedItem={selectedItem}
@@ -164,10 +164,12 @@ class DownshiftMultiple extends React.Component {
         {({
           getInputProps,
           getItemProps,
+          getMenuProps,
           isOpen,
           inputValue: inputValue2,
           selectedItem: selectedItem2,
           highlightedIndex,
+          selectedItem,
         }) => (
           <div className={classes.container}>
             {renderInput({
@@ -185,23 +187,31 @@ class DownshiftMultiple extends React.Component {
                 )),
                 onChange: this.handleInputChange,
                 onKeyDown: this.handleKeyDown,
-                placeholder: 'Select multiple countries',
+                placeholder: 'Select multiple countries Popper',
               }),
+              ref: node => {
+                popperNode = node;
+              },
               label: 'Label',
             })}
-            {isOpen ? (
-              <Paper className={classes.paper} square>
-                {getSuggestions(inputValue2).map((suggestion, index) =>
-                  renderSuggestion({
-                    suggestion,
-                    index,
-                    itemProps: getItemProps({ item: suggestion.label }),
-                    highlightedIndex,
-                    selectedItem: selectedItem2,
-                  }),
-                )}
-              </Paper>
-            ) : null}
+            <Popper open={isOpen} anchorEl={popperNode}>
+              <div {...(isOpen ? getMenuProps({}, { suppressRefError: true }) : {})}>
+                <Paper
+                  square
+                  style={{ marginTop: 8, width: popperNode ? popperNode.clientWidth : null }}
+                >
+                  {getSuggestions(inputValue).map((suggestion, index) =>
+                    renderSuggestion({
+                      suggestion,
+                      index,
+                      itemProps: getItemProps({ item: suggestion.label }),
+                      highlightedIndex,
+                      selectedItem,
+                    }),
+                  )}
+                </Paper>
+              </div>
+            </Popper>
           </div>
         )}
       </Downshift>
